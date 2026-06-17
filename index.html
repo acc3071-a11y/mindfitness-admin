@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>마인드피트니스 예약 관리자</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+:root{--bg:#ece5d6;--surface:#faf6ec;--surface2:#f2ecdd;--ink:#2b2822;--muted:#877e6e;--line:#ddd3bf;--accent:#2f4a3e;--accent2:#5b7a6a;--danger:#a8462f;--blue:#244c77;--orange:#805f1f;--serif:"Gowun Batang",serif;--sans:"IBM Plex Sans KR",sans-serif}*{box-sizing:border-box;margin:0;padding:0}body{font-family:var(--sans);font-weight:300;color:var(--ink);background:var(--bg);line-height:1.6;min-height:100vh}.wrap{max-width:1240px;margin:0 auto;padding:32px 18px 70px}.top{display:flex;justify-content:space-between;gap:16px;align-items:flex-end;margin-bottom:24px;flex-wrap:wrap}.eyebrow{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent2);font-weight:600;margin-bottom:8px}h1{font-family:var(--serif);font-size:clamp(30px,5vw,46px);line-height:1.12}.desc{color:var(--muted);font-size:14px;margin-top:8px}.panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 18px 40px -28px rgba(43,40,34,.4);margin-bottom:18px}.controls,.manual-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;align-items:end}.block-grid{display:grid;grid-template-columns:1fr 1fr 1.2fr auto;gap:10px;align-items:end}@media(max-width:820px){.block-grid{grid-template-columns:1fr}}@media(max-width:900px){.controls,.manual-grid{grid-template-columns:1fr 1fr}}@media(max-width:560px){.controls,.manual-grid{grid-template-columns:1fr}.top{align-items:flex-start}}label{display:block;font-size:13px;font-weight:500;margin-bottom:6px}input,select,textarea,button{font-family:var(--sans);font-size:15px;border-radius:11px;border:1px solid var(--line);padding:11px 13px;background:var(--surface2);color:var(--ink)}textarea{min-height:74px;resize:vertical}button{cursor:pointer;background:var(--accent);color:#fff;border:none;font-weight:500}.btn-light{background:transparent;color:var(--accent);border:1px solid var(--accent2)}.btn-danger{background:var(--danger)}.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px}@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}}.stat{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px}.stat b{font-size:25px;color:var(--accent)}.stat span{display:block;color:var(--muted);font-size:13px}.table-wrap{overflow:auto;border-radius:14px;border:1px solid var(--line)}table{width:100%;border-collapse:collapse;min-width:1320px;background:var(--surface)}th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;font-size:14px;vertical-align:top}th{background:var(--surface2);font-weight:600;color:var(--accent);position:sticky;top:0}tr:last-child td{border-bottom:none}.empty{text-align:center;color:var(--muted);padding:32px}.pill{display:inline-block;border-radius:999px;background:#e3ebe3;color:var(--accent);padding:4px 10px;font-size:12px;font-weight:500}.memo{max-width:220px;white-space:pre-wrap}.small{font-size:12px;color:var(--muted);margin-top:10px}.danger{color:var(--danger)}.loading{opacity:.55;pointer-events:none}.section-title{font-family:var(--serif);font-size:22px;font-weight:700;margin-bottom:4px}.sub{color:var(--muted);font-size:13px;margin-bottom:18px}.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--accent);color:#fff;padding:12px 16px;border-radius:999px;display:none;box-shadow:0 10px 30px rgba(0,0,0,.2);z-index:10}.toast.show{display:block}.copy{font-size:12px;padding:7px 10px;border-radius:9px;background:var(--surface2);color:var(--accent);border:1px solid var(--line)}.actions{display:flex;gap:6px;flex-wrap:wrap}.channel-select{padding:7px 10px;font-size:13px;min-width:86px}.action-btn{font-size:12px;padding:7px 9px;border-radius:9px}.status,.channel{display:inline-block;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600}.status-예약중{background:#e3ebe3;color:#2f4a3e}.status-승인{background:#dfe8f4;color:#244c77}.status-취소{background:#f2ded8;color:#a8462f}.status-노쇼{background:#f3e8cf;color:#805f1f}.status-검사완{background:#e7e1ef;color:#53386c}.channel-온라인{background:#e4edf6;color:#244c77}.channel-전화{background:#f5ead8;color:#805f1f}.manual-grid .wide{grid-column:span 2}@media(max-width:560px){.manual-grid .wide{grid-column:span 1}}
+
+.memo-preview{max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block;vertical-align:middle}
+.memo-view-btn{font-size:12px;padding:6px 9px;border-radius:9px;margin-left:6px;background:var(--surface2);color:var(--accent);border:1px solid var(--line)}
+.memo-modal-overlay{position:fixed;inset:0;background:rgba(38,35,29,.48);display:none;align-items:center;justify-content:center;padding:24px;z-index:999}
+.memo-modal-overlay.open{display:flex}
+.memo-modal{background:var(--surface);border:1px solid var(--line);border-radius:18px;max-width:520px;width:100%;padding:24px;box-shadow:0 26px 70px -26px rgba(0,0,0,.45)}
+.memo-modal h3{font-family:var(--serif);font-size:24px;margin-bottom:10px;color:var(--accent)}
+.memo-modal-content{background:var(--surface2);border-radius:12px;padding:16px;white-space:pre-wrap;line-height:1.7;max-height:50vh;overflow:auto}
+.memo-modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.edit-modal-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:10px}
+.edit-modal-grid input,.edit-modal-grid select,.edit-modal-grid textarea{width:100%}
+.edit-modal-grid .wide{grid-column:1 / -1}
+.edit-person-btn{font-size:12px;padding:5px 7px;border-radius:8px;background:var(--blue);color:#fff;white-space:nowrap}
+@media(max-width:560px){.edit-modal-grid{grid-template-columns:1fr}.edit-modal-grid .wide{grid-column:auto}}
+
+
+/* --- Compact reservation list fixes --- */
+td.memo{width:160px;max-width:160px;white-space:nowrap}
+.memo-preview{max-width:90px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block;vertical-align:middle}
+.memo-view-btn{font-size:12px;padding:5px 8px;border-radius:8px;margin-left:4px;background:var(--surface2);color:var(--accent);border:1px solid var(--line)}
+th:nth-child(10),td:nth-child(10){width:360px;min-width:360px;max-width:360px}
+td:nth-child(10) .actions{display:flex;flex-wrap:nowrap;gap:6px;align-items:center}
+td:nth-child(10) .action-btn{font-size:12px;padding:6px 9px;white-space:nowrap;min-width:52px;line-height:1.2}
+td:nth-child(11){width:58px;max-width:58px}
+td:nth-child(11) .copy{white-space:nowrap;padding:6px 8px}
+th,td{vertical-align:middle}
+
+
+/* --- No inner horizontal scroll layout --- */
+.wrap{max-width:1680px;width:96vw}
+.table-wrap{overflow:visible}
+table{min-width:0!important;width:100%;table-layout:auto}
+th,td{padding:10px 10px;font-size:13px}
+th:nth-child(1),td:nth-child(1){width:96px}
+th:nth-child(2),td:nth-child(2){width:62px}
+th:nth-child(3),td:nth-child(3){width:92px}
+th:nth-child(4),td:nth-child(4){width:76px}
+th:nth-child(5),td:nth-child(5){width:70px}
+th:nth-child(6),td:nth-child(6){width:55px}
+th:nth-child(7),td:nth-child(7){width:80px}
+th:nth-child(8),td:nth-child(8){width:105px}
+th:nth-child(9),td:nth-child(9){width:160px;max-width:160px}
+td.memo{width:160px;max-width:160px;white-space:nowrap}
+.memo-preview{max-width:90px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block;vertical-align:middle}
+.memo-view-btn{font-size:12px;padding:5px 8px;border-radius:8px;margin-left:4px;background:var(--surface2);color:var(--accent);border:1px solid var(--line)}
+th:nth-child(10),td:nth-child(10){width:330px;min-width:330px;max-width:330px}
+td:nth-child(10) .actions{display:flex;flex-wrap:nowrap;gap:3px;align-items:center}
+td:nth-child(10) .action-btn{font-size:12px;padding:5px 7px;white-space:nowrap;min-width:auto;width:auto;line-height:1.2}
+th:nth-child(11),td:nth-child(11){width:58px;max-width:58px}
+td:nth-child(11) .copy{white-space:nowrap;padding:6px 8px}
+.channel-select{min-width:78px;padding:7px 9px;font-size:13px}
+.status,.channel{white-space:nowrap}
+
+
+.delete-person-btn{font-size:12px;padding:5px 7px;border-radius:8px;background:var(--danger);color:#fff;white-space:nowrap}
+
+
+/* --- Final compact action column layout --- */
+th:nth-child(10),td:nth-child(10){
+  width:1%!important;
+  min-width:0!important;
+  max-width:none!important;
+  padding-left:4px!important;
+  padding-right:4px!important;
+  white-space:nowrap!important;
+}
+td:nth-child(10) .actions{
+  display:inline-flex!important;
+  flex-wrap:nowrap!important;
+  gap:2px!important;
+  align-items:center!important;
+  white-space:nowrap!important;
+  width:max-content!important;
+}
+td:nth-child(10) .action-btn{
+  min-width:0!important;
+  width:auto!important;
+  padding:5px 5px!important;
+  font-size:12px!important;
+  line-height:1.1!important;
+  white-space:nowrap!important;
+}
+
+th:nth-child(11),td:nth-child(11){
+  width:148px!important;
+  min-width:148px!important;
+  max-width:148px!important;
+  padding-left:6px!important;
+  padding-right:6px!important;
+}
+td:nth-child(11) .actions{
+  display:inline-flex!important;
+  flex-wrap:nowrap!important;
+  gap:4px!important;
+  align-items:center!important;
+  white-space:nowrap!important;
+}
+td:nth-child(11) .copy,
+td:nth-child(11) .edit-person-btn,
+td:nth-child(11) .delete-person-btn{
+  min-width:0!important;
+  width:auto!important;
+  padding:5px 7px!important;
+  font-size:12px!important;
+  line-height:1.1!important;
+}
+
+
+/* --- Admin password login screen --- */
+.login-screen{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:32px 18px;
+  background:var(--bg);
+}
+.login-card{
+  width:100%;
+  max-width:430px;
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:30px 28px;
+  box-shadow:0 18px 40px -28px rgba(43,40,34,.4);
+}
+.login-card h1{
+  font-family:var(--serif);
+  font-size:34px;
+  line-height:1.15;
+  margin-bottom:8px;
+}
+.login-card p{
+  color:var(--muted);
+  font-size:14px;
+  margin-bottom:20px;
+}
+.login-card label{
+  color:var(--accent);
+}
+.login-card input{
+  width:100%;
+  margin-bottom:12px;
+  background:var(--surface2);
+}
+.login-card button{
+  width:100%;
+  margin-top:4px;
+}
+.login-error{
+  display:none;
+  margin-top:12px;
+  color:var(--danger);
+  font-size:13px;
+  text-align:center;
+  font-weight:500;
+}
+.login-help{
+  margin-top:14px;
+  font-size:12px;
+  color:var(--muted);
+  text-align:center;
+}
+body:not(.admin-logged-in) .wrap,
+body:not(.admin-logged-in) .toast,
+body:not(.admin-logged-in) .memo-modal-overlay{
+  display:none;
+}
+body.admin-logged-in .login-screen{
+  display:none;
+}
+.walkin-form{
+  display:grid;
+  grid-template-columns:1fr 1.3fr;
+  gap:18px;
+  align-items:start;
+}
+.walkin-time-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+}
+.time-choice{
+  background:var(--surface2);
+  color:var(--ink);
+  border:1px solid var(--line);
+  min-height:48px;
+}
+.time-choice.selected{
+  background:var(--accent);
+  color:#fff;
+  border-color:var(--accent);
+}
+.walkin-fields{
+  display:grid;
+  grid-column:1 / -1;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+}
+.walkin-fields input,
+.walkin-fields select{
+  width:100%;
+}
+.walkin-submit{
+  grid-column:span 2;
+  min-height:48px;
+}
+@media(max-width:900px){
+  .walkin-form{grid-template-columns:1fr}
+  .walkin-time-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:560px){
+  .walkin-fields{grid-template-columns:1fr}
+  .walkin-submit{grid-column:span 1}
+}
+.memo-empty{color:var(--muted)}
+.memo-modal-info{font-size:13px;color:var(--muted);margin-bottom:10px}
+textarea.memo-modal-content{
+  width:100%;
+  min-height:190px;
+  max-height:50vh;
+  line-height:1.7;
+  resize:vertical;
+}
+textarea.memo-modal-content[readonly]{
+  opacity:.86;
+}
+.calendar-panel{
+  padding-bottom:26px;
+}
+.calendar-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:14px;
+  margin-bottom:16px;
+  flex-wrap:wrap;
+}
+.calendar-title{
+  font-family:var(--serif);
+  font-size:28px;
+  font-weight:700;
+  color:var(--accent);
+  line-height:1.15;
+}
+.calendar-controls{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.calendar-controls button{
+  padding:9px 12px;
+  border-radius:10px;
+  font-size:13px;
+}
+.calendar-shell{
+  overflow-x:auto;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:var(--surface2);
+}
+.calendar-weekdays,
+.calendar-grid{
+  min-width:980px;
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+}
+.calendar-weekdays div{
+  padding:11px 8px;
+  text-align:center;
+  font-weight:600;
+  color:var(--accent);
+  border-right:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+  background:#efe7d7;
+}
+.calendar-weekdays div:last-child{
+  border-right:none;
+}
+.calendar-grid{
+  align-items:stretch;
+}
+.calendar-day{
+  min-height:138px;
+  padding:10px;
+  background:var(--surface);
+  border-right:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+  position:relative;
+}
+.calendar-day:nth-child(7n){
+  border-right:none;
+}
+.calendar-day.other-month{
+  background:#f3eee2;
+  color:#a59b88;
+}
+.calendar-day.blocked-all{
+  background:rgba(255,255,255,.78);
+  box-shadow:inset 0 0 0 999px rgba(255,255,255,.42);
+}
+.calendar-day.blocked-all::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  backdrop-filter:blur(1.4px);
+  pointer-events:none;
+}
+.calendar-date{
+  position:relative;
+  z-index:1;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
+  margin-bottom:8px;
+  font-weight:700;
+  color:var(--accent);
+}
+.calendar-day.other-month .calendar-date{
+  color:#9a907f;
+}
+.calendar-block-label{
+  display:inline-block;
+  border-radius:999px;
+  background:#fff;
+  color:var(--danger);
+  border:1px solid #ebd8d0;
+  padding:3px 8px;
+  font-size:11px;
+  font-weight:700;
+  white-space:nowrap;
+}
+.calendar-items{
+  position:relative;
+  z-index:1;
+  display:grid;
+  gap:7px;
+}
+.calendar-item{
+  background:#e7efe7;
+  border:1px solid #d4e0d3;
+  border-radius:10px;
+  padding:8px;
+  line-height:1.35;
+}
+.calendar-time-block{
+  background:#fff;
+  border:1px solid #e7d9c7;
+  border-radius:10px;
+  padding:8px;
+  line-height:1.35;
+  color:var(--orange);
+  font-size:12px;
+  font-weight:700;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.calendar-block-reason{
+  background:#fff;
+  border:1px solid #ebd8d0;
+  border-radius:10px;
+  padding:8px;
+  color:var(--danger);
+  font-size:12px;
+  font-weight:700;
+  line-height:1.35;
+  white-space:pre-wrap;
+}
+.calendar-item-time{
+  font-size:12px;
+  font-weight:700;
+  color:var(--accent);
+  margin-bottom:2px;
+}
+.calendar-item-main{
+  font-size:13px;
+  font-weight:700;
+  color:var(--ink);
+  word-break:keep-all;
+}
+.calendar-item-name{
+  font-size:13px;
+  font-weight:700;
+  color:var(--ink);
+  word-break:keep-all;
+}
+.calendar-item-phone{
+  font-size:12px;
+  color:var(--muted);
+  word-break:break-all;
+}
+.calendar-empty{
+  position:relative;
+  z-index:1;
+  color:#b3aa98;
+  font-size:12px;
+  padding-top:6px;
+}
+@media(max-width:760px){
+  .calendar-title{font-size:24px}
+  .calendar-controls{width:100%;justify-content:space-between}
+  .calendar-controls button{flex:1}
+}
+
+</style>
+</head>
+<body>
+
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="eyebrow">Mind Fitness Admin</div>
+    <h1>관리자 로그인</h1>
+    <p>예약 정보를 확인하려면 관리자 비밀번호를 입력해 주세요.</p>
+
+    <form id="loginForm">
+      <label for="adminPassword">비밀번호</label>
+      <input type="password" id="adminPassword" placeholder="비밀번호 입력" autocomplete="current-password" />
+      <button type="submit">관리자 페이지 들어가기</button>
+      <div class="login-error" id="loginError">비밀번호가 맞지 않습니다.</div>
+    </form>
+
+    <div class="login-help">관리자 전용 페이지입니다.</div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="top"><div><div class="eyebrow">Mind Fitness Admin</div><h1>예약 관리자</h1><p class="desc">예약 확인, 검색, 상태 변경, 관리 구분 선택, 엑셀 다운로드를 한 곳에서 관리합니다.</p></div><div class="actions"><button class="btn-light" id="refreshBtn">새로고침</button><button id="excelBtn">엑셀 다운로드</button></div></div>
+
+  <div class="panel"><div class="controls">
+    <div><label for="dateFilter">예약일 선택</label><input type="date" id="dateFilter" /></div>
+    <div><label for="statusFilter">상태</label><select id="statusFilter"><option value="">전체</option><option>예약중</option><option>승인</option><option>취소</option><option>노쇼</option><option>검사완</option></select></div>
+    <div><label for="channelFilter">관리</label><select id="channelFilter"><option value="">전체</option><option>온라인</option><option>전화</option></select></div>
+    <div><label for="keywordFilter">검색</label><input type="search" id="keywordFilter" placeholder="아동/보호자/연락처" /></div>
+    <div class="actions"><button id="todayBtn" type="button">오늘</button><button id="allBtn" class="btn-light" type="button">전체 보기</button></div>
+  </div><p class="small">취소 상태는 예약 가능 시간에서 다시 열리도록 예약 페이지도 함께 업데이트해야 합니다.</p></div>
+
+  <div class="stats"><div class="stat"><b id="countAll">0</b><span>표시 예약</span></div><div class="stat"><b id="countBooked">0</b><span>예약중</span></div><div class="stat"><b id="countApproved">0</b><span>승인</span></div><div class="stat"><b id="countDone">0</b><span>검사완</span></div><div class="stat"><b id="countCanceled">0</b><span>취소/노쇼</span></div><div class="stat"><b id="countBlocked">0</b><span>차단 일정</span></div></div>
+
+  <div class="panel"><div class="section-title">예약 목록</div><p class="sub">상태 버튼과 관리 구분을 변경하면 바로 반영됩니다.</p><div class="table-wrap"><table><thead><tr><th>예약일</th><th>시간</th><th>관리</th><th>상태</th><th>아동</th><th>학년</th><th>보호자</th><th>연락처</th><th>메모</th><th>상태 변경</th><th>관리</th></tr></thead><tbody id="reservationBody"><tr><td colspan="11" class="empty">불러오는 중...</td></tr></tbody></table></div></div>
+
+  <div class="panel calendar-panel">
+    <div class="calendar-header">
+      <div>
+        <div class="section-title">예약 달력</div>
+        <p class="sub">현재 목록에 표시된 예약을 날짜별로 크게 확인합니다.</p>
+      </div>
+      <div>
+        <div class="calendar-title" id="calendarMonthTitle"></div>
+        <div class="calendar-controls">
+          <button class="btn-light" id="calendarPrevBtn" type="button">이전 달</button>
+          <button class="btn-light" id="calendarTodayBtn" type="button">이번 달</button>
+          <button class="btn-light" id="calendarNextBtn" type="button">다음 달</button>
+        </div>
+      </div>
+    </div>
+    <div class="calendar-shell">
+      <div class="calendar-weekdays"><div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div></div>
+      <div class="calendar-grid" id="reservationCalendar"></div>
+    </div>
+  </div>
+
+
+<div class="panel">
+    <div class="section-title">예약 불가 일정 추가</div>
+    <p class="sub">하루 전체를 막으려면 시간을 <b>하루 전체(ALL)</b>로 선택하세요. 특정 시간만 막을 수도 있습니다.</p>
+    <div class="block-grid">
+      <div><label for="blockDate">차단 날짜</label><input type="date" id="blockDate" /></div>
+      <div><label for="blockTime">차단 시간</label><select id="blockTime"><option value="ALL">하루 전체(ALL)</option><option value="09:00">09:00</option><option value="10:00">10:00</option><option value="11:00">11:00</option><option value="13:00">13:00</option><option value="14:00">14:00</option><option value="15:00">15:00</option><option value="16:00">16:00</option></select></div>
+      <div><label for="blockReason">사유</label><input type="text" id="blockReason" placeholder="예: 휴무, 회의, 출장" /></div>
+      <button id="addBlockBtn" type="button">차단 추가</button>
+    </div>
+    <p class="small">차단 일정을 추가하면 고객용 예약 페이지 달력/시간 선택에 반영됩니다.</p>
+  </div>
+
+  
+
+<div class="panel">
+    <div class="section-title">차단 일정 목록</div>
+    <p class="sub">현재 등록된 예약 불가 날짜·시간입니다.</p>
+    <div class="table-wrap"><table style="min-width:720px"><thead><tr><th>차단 날짜</th><th>차단 시간</th><th>사유</th><th>취소</th></tr></thead><tbody id="blockBody"><tr><td colspan="3" class="empty">불러오는 중...</td></tr></tbody></table></div>
+  </div>
+
+  <div class="panel">
+    <div class="section-title">현장접수 검사완료 명단 추가</div>
+    <p class="sub">지난 날짜도 바로 추가할 수 있습니다. 불가 일정과 중복 여부는 확인하지 않고 검사완 상태로 저장됩니다.</p>
+    <div class="walkin-form">
+      <div>
+        <label for="walkinDate">날짜 *</label>
+        <input type="date" id="walkinDate" />
+        <div class="small">현장에서 이미 완료한 검사 기록을 추가할 때 사용하세요.</div>
+      </div>
+      <div>
+        <label>시간 *</label>
+        <div class="walkin-time-grid" id="walkinTimeGrid">
+          <button type="button" class="time-choice" data-walkin-time="09:00">09:00</button>
+          <button type="button" class="time-choice" data-walkin-time="10:00">10:00</button>
+          <button type="button" class="time-choice" data-walkin-time="11:00">11:00</button>
+          <button type="button" class="time-choice" data-walkin-time="13:00">13:00</button>
+          <button type="button" class="time-choice" data-walkin-time="14:00">14:00</button>
+          <button type="button" class="time-choice" data-walkin-time="15:00">15:00</button>
+          <button type="button" class="time-choice" data-walkin-time="16:00">16:00</button>
+        </div>
+      </div>
+      <div class="walkin-fields">
+        <div><label for="walkinChild">아동 이름 *</label><input type="text" id="walkinChild" placeholder="아동 이름" /></div>
+        <div><label for="walkinGrade">아동 학년 *</label><select id="walkinGrade"><option value="">선택하세요</option><option>초1</option><option>초2</option><option>초3</option><option>초4</option><option>초5</option><option>초6</option></select></div>
+        <div><label for="walkinParent">보호자 이름 *</label><input type="text" id="walkinParent" placeholder="보호자 이름" /></div>
+        <div><label for="walkinPhone">보호자 연락처 *</label><input type="tel" id="walkinPhone" placeholder="01012345678" inputmode="numeric" /></div>
+        <button id="addWalkinBtn" class="walkin-submit" type="button">검사완료 명단 추가</button>
+      </div>
+    </div>
+  </div>
+
+  </div>
+
+<div class="memo-modal-overlay" id="memoModalOverlay">
+  <div class="memo-modal">
+    <h3>관리자 메모</h3>
+    <p class="memo-modal-info" id="memoModalInfo"></p>
+    <textarea class="memo-modal-content" id="memoModalContent" placeholder="관리자용 메모를 입력하세요." readonly></textarea>
+    <div class="memo-modal-actions">
+      <button class="btn-light" id="memoClearBtn" type="button">내용 비우기</button>
+      <button class="btn-light" id="memoEditBtn" type="button">수정하기</button>
+      <button id="memoSaveBtn" type="button">저장</button>
+      <button id="memoCloseBtn" type="button">닫기</button>
+    </div>
+  </div>
+</div>
+
+<div class="memo-modal-overlay" id="editModalOverlay">
+  <div class="memo-modal">
+    <h3>예약 정보 수정</h3>
+    <p class="memo-modal-info" id="editModalInfo"></p>
+    <div class="edit-modal-grid">
+      <div><label for="editDate">예약일</label><input type="date" id="editDate" /></div>
+      <div><label for="editTime">시간</label><select id="editTime"><option value="09:00">09:00</option><option value="10:00">10:00</option><option value="11:00">11:00</option><option value="13:00">13:00</option><option value="14:00">14:00</option><option value="15:00">15:00</option><option value="16:00">16:00</option></select></div>
+      <div><label for="editChannel">관리</label><select id="editChannel"><option>온라인</option><option>전화</option></select></div>
+      <div><label for="editStatus">상태</label><select id="editStatus"><option>예약중</option><option>승인</option><option>취소</option><option>노쇼</option><option>검사완</option></select></div>
+      <div><label for="editChild">아동 이름</label><input type="text" id="editChild" /></div>
+      <div><label for="editGrade">아동 학년</label><select id="editGrade"><option>초1</option><option>초2</option><option>초3</option><option>초4</option><option>초5</option><option>초6</option></select></div>
+      <div><label for="editParent">보호자 이름</label><input type="text" id="editParent" /></div>
+      <div><label for="editPhone">보호자 연락처</label><input type="tel" id="editPhone" inputmode="numeric" /></div>
+      <div class="wide"><label for="editMemo">관리자 메모</label><textarea id="editMemo" placeholder="관리자용 메모"></textarea></div>
+    </div>
+    <div class="memo-modal-actions">
+      <button class="btn-light" id="editCloseBtn" type="button">닫기</button>
+      <button id="editSaveBtn" type="button">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+
+/*
+  관리자 비밀번호 설정 위치
+  아래 따옴표 안의 글자만 직접 바꾸면 됩니다.
+  예시: const ADMIN_PASSWORD = "abc1234!";
+*/
+const ADMIN_PASSWORD = "946312";
+
+function initAdminLogin(){
+  const form = document.getElementById('loginForm');
+  const input = document.getElementById('adminPassword');
+  const error = document.getElementById('loginError');
+
+  if(sessionStorage.getItem('mindfitness_admin_login') === 'ok'){
+    document.body.classList.add('admin-logged-in');
+    loadReservations(true);
+    loadBlocks();
+    return;
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+
+    if(input.value === ADMIN_PASSWORD){
+      sessionStorage.setItem('mindfitness_admin_login', 'ok');
+      document.body.classList.add('admin-logged-in');
+      error.style.display = 'none';
+      loadReservations(true);
+      loadBlocks();
+    }else{
+      error.style.display = 'block';
+      input.value = '';
+      input.focus();
+    }
+  });
+}
+
+const SUPABASE_URL="https://ptszojbihlgbeordpghk.supabase.co";
+const SUPABASE_ANON_KEY="sb_publishable_3xS9FCjnbuTKJeybzQV52Q_xciQUTEr";
+const API=SUPABASE_URL+"/rest/v1";
+const headers={apikey:SUPABASE_ANON_KEY,Authorization:"Bearer "+SUPABASE_ANON_KEY,"Content-Type":"application/json"};
+const STATUSES=['예약중','승인','취소','노쇼','검사완'];
+const dateFilter=document.getElementById('dateFilter'), statusFilter=document.getElementById('statusFilter'), channelFilter=document.getElementById('channelFilter'), keywordFilter=document.getElementById('keywordFilter'), reservationBody=document.getElementById('reservationBody'), blockBody=document.getElementById('blockBody'), toast=document.getElementById('toast'), reservationCalendar=document.getElementById('reservationCalendar'), calendarMonthTitle=document.getElementById('calendarMonthTitle');
+let currentRows=[];
+let blockedRows=[];
+let selectedWalkinTime='';
+const today=new Date(), todayStr=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+let calendarYear=today.getFullYear();
+let calendarMonth=today.getMonth();
+dateFilter.value=''; document.getElementById('blockDate').value=todayStr; document.getElementById('walkinDate').value=todayStr;
+function showToast(msg){toast.textContent=msg;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),1700)}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+let currentMemoRow=null;
+function setMemoEditMode(isEditing){
+  const input=document.getElementById('memoModalContent');
+  const saveBtn=document.getElementById('memoSaveBtn');
+  input.readOnly=!isEditing;
+  saveBtn.disabled=!isEditing;
+  saveBtn.style.opacity=isEditing?'1':'.45';
+  if(isEditing){
+    input.focus();
+    input.setSelectionRange(input.value.length,input.value.length);
+  }
+}
+function openMemoModal(row,startEditing=false){
+  currentMemoRow=row;
+  const memoText=String(row.memo||'');
+  document.getElementById('memoModalInfo').textContent=`${row.reservation_date} ${row.reservation_time} · ${row.child_name} / ${row.parent_name}`;
+  document.getElementById('memoModalContent').value=memoText;
+  document.getElementById('memoModalOverlay').classList.add('open');
+  setMemoEditMode(startEditing || !memoText.trim());
+}
+function closeMemoModal(){
+  document.getElementById('memoModalOverlay').classList.remove('open');
+  currentMemoRow=null;
+}
+async function saveMemo(){
+  if(!currentMemoRow) return;
+  const memo=document.getElementById('memoModalContent').value.trim();
+  const saved=await updateReservation(currentMemoRow,{memo},'메모 저장 완료');
+  if(saved) closeMemoModal();
+}
+document.addEventListener('click', function(e){
+  const memoBtn = e.target.closest('[data-memo-key]');
+  if(memoBtn){
+    const row=currentRows.find(item=>keyOf(item)===memoBtn.dataset.memoKey) || JSON.parse(decodeURIComponent(memoBtn.dataset.memoKey));
+    openMemoModal(row,memoBtn.dataset.memoEmpty==='1');
+  }
+});
+setTimeout(()=>{
+  const closeBtn=document.getElementById('memoCloseBtn');
+  const editBtn=document.getElementById('memoEditBtn');
+  const saveBtn=document.getElementById('memoSaveBtn');
+  const clearBtn=document.getElementById('memoClearBtn');
+  const overlay=document.getElementById('memoModalOverlay');
+  const input=document.getElementById('memoModalContent');
+  if(closeBtn) closeBtn.addEventListener('click', closeMemoModal);
+  if(editBtn) editBtn.addEventListener('click', ()=>setMemoEditMode(true));
+  if(saveBtn) saveBtn.addEventListener('click', saveMemo);
+  if(clearBtn) clearBtn.addEventListener('click', ()=>{input.value='';setMemoEditMode(true);});
+  if(overlay) overlay.addEventListener('click', e=>{ if(e.target===overlay) closeMemoModal(); });
+},0)
+
+let currentEditRow=null;
+function setSelectValue(select,value){
+  const text=String(value||'').trim();
+  if(text && !Array.from(select.options).some(option=>option.value===text || option.textContent===text)){
+    select.add(new Option(text,text));
+  }
+  select.value=text;
+}
+function openEditModal(row){
+  currentEditRow=row;
+  document.getElementById('editModalInfo').textContent=`${row.reservation_date} ${row.reservation_time} · ${row.child_name} / ${row.parent_name}`;
+  document.getElementById('editDate').value=row.reservation_date||'';
+  setSelectValue(document.getElementById('editTime'),row.reservation_time||'');
+  setSelectValue(document.getElementById('editChannel'),cleanChannel(row.booking_channel));
+  setSelectValue(document.getElementById('editStatus'),cleanStatus(row.status));
+  document.getElementById('editChild').value=row.child_name||'';
+  setSelectValue(document.getElementById('editGrade'),row.grade||'');
+  document.getElementById('editParent').value=row.parent_name||'';
+  document.getElementById('editPhone').value=row.phone||'';
+  document.getElementById('editMemo').value=row.memo||'';
+  document.getElementById('editModalOverlay').classList.add('open');
+}
+function closeEditModal(){
+  document.getElementById('editModalOverlay').classList.remove('open');
+  currentEditRow=null;
+}
+async function saveEditReservation(){
+  if(!currentEditRow) return;
+  const payload={
+    reservation_date:document.getElementById('editDate').value,
+    reservation_time:document.getElementById('editTime').value,
+    booking_channel:document.getElementById('editChannel').value,
+    status:document.getElementById('editStatus').value,
+    child_name:document.getElementById('editChild').value.trim(),
+    grade:document.getElementById('editGrade').value,
+    parent_name:document.getElementById('editParent').value.trim(),
+    phone:document.getElementById('editPhone').value.replace(/\D/g,''),
+    memo:document.getElementById('editMemo').value.trim()
+  };
+  if(!payload.reservation_date){alert('예약일을 선택해 주세요.');return}
+  if(!payload.reservation_time){alert('시간을 선택해 주세요.');return}
+  if(!payload.child_name){alert('아동 이름을 입력해 주세요.');return}
+  if(!payload.grade){alert('아동 학년을 선택해 주세요.');return}
+  if(!payload.parent_name){alert('보호자 이름을 입력해 주세요.');return}
+  if(!payload.phone){alert('보호자 연락처를 입력해 주세요.');return}
+  const saved=await updateReservation(currentEditRow,payload,'예약 정보 수정 완료');
+  if(saved) closeEditModal();
+}
+document.addEventListener('click', function(e){
+  const editBtn=e.target.closest('[data-edit-key]');
+  if(editBtn){
+    const row=currentRows.find(item=>keyOf(item)===editBtn.dataset.editKey) || JSON.parse(decodeURIComponent(editBtn.dataset.editKey));
+    openEditModal(row);
+  }
+});
+setTimeout(()=>{
+  const closeBtn=document.getElementById('editCloseBtn');
+  const saveBtn=document.getElementById('editSaveBtn');
+  const overlay=document.getElementById('editModalOverlay');
+  const phone=document.getElementById('editPhone');
+  if(closeBtn) closeBtn.addEventListener('click', closeEditModal);
+  if(saveBtn) saveBtn.addEventListener('click', saveEditReservation);
+  if(overlay) overlay.addEventListener('click', e=>{ if(e.target===overlay) closeEditModal(); });
+  if(phone) phone.addEventListener('input', e=>{e.target.value=e.target.value.replace(/\D/g,'')});
+},0)
+
+function cleanStatus(s){s=String(s||'예약중').replaceAll("'",'').trim(); return STATUSES.includes(s)?s:'예약중'}
+function cleanChannel(s){s=String(s||'온라인').replaceAll("'",'').trim(); return ['온라인','전화'].includes(s)?s:'온라인'}
+function formatReservationDate(dateStr){
+  const days=['일','월','화','수','목','금','토'];
+  const parts=String(dateStr||'').split('-').map(Number);
+  if(parts.length!==3 || parts.some(n=>!n)) return String(dateStr||'');
+  const date=new Date(parts[0],parts[1]-1,parts[2]);
+  return `${dateStr}(${days[date.getDay()]})`;
+}
+function formatCopyDate(dateStr){
+  const days=['일','월','화','수','목','금','토'];
+  const parts=String(dateStr||'').split('-').map(Number);
+  if(parts.length!==3 || parts.some(n=>!n)) return String(dateStr||'');
+  const date=new Date(parts[0],parts[1]-1,parts[2]);
+  return `${parts[0]}. ${parts[1]}. ${parts[2]}.(${days[date.getDay()]})`;
+}
+function formatCopyTime(timeStr){
+  const parts=String(timeStr||'').split(':').map(Number);
+  if(parts.length<2 || Number.isNaN(parts[0])) return String(timeStr||'');
+  const hour=parts[0];
+  const minute=Number.isNaN(parts[1])?0:parts[1];
+  const period=hour<12?'오전':'오후';
+  const displayHour=hour%12===0?12:hour%12;
+  return minute?`${period} ${displayHour}시 ${minute}분`:`${period} ${displayHour}시`;
+}
+function buildCopyMessage(row){
+  return `안녕하세요. 마인드피트니스센터입니다.
+아래와 같이 예약이 확정되어 안내드립니다.
+
+■ 예약 일시: ${formatCopyDate(row.reservation_date)} ${formatCopyTime(row.reservation_time)}
+■ 장소: 판교보건지소 (성남시 분당구 운중동 935, 3층)
+■ 예약자: ${row.child_name||''}님 
+(보호자 ${row.parent_name||''}님)
+■ 문의: 031-729-4243
+
+감사합니다. 행복한 하루 되세요 ^^
+https://www.instagram.com/mindfitness24/ (센터 인스타그램 링크)`;
+}
+
+function filterKeyword(rows){
+  const q=(keywordFilter.value||'').trim().toLowerCase();
+  if(!q) return rows;
+  return rows.filter(r=>[r.child_name,r.parent_name,r.phone,r.grade,r.memo,r.reservation_date,r.reservation_time,cleanStatus(r.status),cleanChannel(r.booking_channel)].some(v=>String(v??'').toLowerCase().includes(q)));
+}
+async function supa(path,opts={}){
+  const res=await fetch(API+path,{...opts,headers:{...headers,...(opts.headers||{})}});
+  const text=await res.text();
+  if(!res.ok){ throw new Error(text || res.statusText); }
+  if(!text) return null;
+  try{ return JSON.parse(text); }catch(e){ return text; }
+}
+function makeQuery(all=false){let path='/reservations?select=*&order=reservation_date.asc,reservation_time.asc'; if(!all && dateFilter.value) path+='&reservation_date=eq.'+encodeURIComponent(dateFilter.value); if(statusFilter.value) path+='&status=eq.'+encodeURIComponent(statusFilter.value); if(channelFilter.value) path+='&booking_channel=eq.'+encodeURIComponent(channelFilter.value); return path;}
+async function loadReservations(all=false){document.body.classList.add('loading'); try{const data=await supa(makeQuery(all)); currentRows=filterKeyword(data||[]); if(dateFilter.value) setCalendarMonthFromDate(dateFilter.value); renderReservations(currentRows); renderCalendar();}catch(e){reservationBody.innerHTML='<tr><td colspan="11" class="empty danger">예약 목록을 불러오지 못했습니다. booking_channel 컬럼 또는 SELECT 정책을 확인하세요.</td></tr>'; renderCalendar(); console.error(e)} finally{document.body.classList.remove('loading')}}
+function updateStats(rows){document.getElementById('countAll').textContent=rows.length; document.getElementById('countBooked').textContent=rows.filter(r=>cleanStatus(r.status)==='예약중').length; document.getElementById('countApproved').textContent=rows.filter(r=>cleanStatus(r.status)==='승인').length; document.getElementById('countDone').textContent=rows.filter(r=>cleanStatus(r.status)==='검사완').length; document.getElementById('countCanceled').textContent=rows.filter(r=>['취소','노쇼'].includes(cleanStatus(r.status))).length}
+function keyOf(r){return encodeURIComponent(JSON.stringify({child_name:r.child_name,grade:r.grade,parent_name:r.parent_name,phone:r.phone,reservation_date:r.reservation_date,reservation_time:r.reservation_time}))}
+function reservationPath(row){
+  if(row.id!==undefined && row.id!==null) return '/reservations?id=eq.'+encodeURIComponent(row.id);
+  return '/reservations?child_name=eq.'+encodeURIComponent(row.child_name)+'&grade=eq.'+encodeURIComponent(row.grade)+'&parent_name=eq.'+encodeURIComponent(row.parent_name)+'&phone=eq.'+encodeURIComponent(row.phone)+'&reservation_date=eq.'+encodeURIComponent(row.reservation_date)+'&reservation_time=eq.'+encodeURIComponent(row.reservation_time);
+}
+function renderReservations(rows){updateStats(rows); if(!rows.length){reservationBody.innerHTML='<tr><td colspan="11" class="empty">예약이 없습니다.</td></tr>'; return} reservationBody.innerHTML=rows.map(r=>{const st=cleanStatus(r.status), ch=cleanChannel(r.booking_channel); const memoText=String(r.memo||'').trim(); const text=buildCopyMessage(r); const key=keyOf(r); return `<tr><td><span class="pill">${esc(formatReservationDate(r.reservation_date))}</span></td><td>${esc(r.reservation_time)}</td><td><select class="channel-select" data-key="${key}"><option ${ch==='온라인'?'selected':''}>온라인</option><option ${ch==='전화'?'selected':''}>전화</option></select></td><td><span class="status status-${st}">${st}</span></td><td>${esc(r.child_name)}</td><td>${esc(r.grade)}</td><td>${esc(r.parent_name)}</td><td><a href="tel:${esc(r.phone)}" style="color:var(--accent);font-weight:600;text-decoration:none">${esc(r.phone)}</a></td><td class="memo">${
+  memoText
+    ? `<span class="memo-preview">${esc(memoText)}</span><button type="button" class="memo-view-btn" data-memo-key="${key}">보기</button>`
+    : `<span class="memo-preview memo-empty">메모 없음</span><button type="button" class="memo-view-btn" data-memo-key="${key}" data-memo-empty="1">쓰기</button>`
+}</td><td><div class="actions">${STATUSES.map(s=>`<button class="action-btn" data-status="${s}" data-key="${key}">${s}</button>`).join('')}</div></td><td><div class="actions"><button class="copy" data-copy="${encodeURIComponent(text)}">복사</button><button class="edit-person-btn" data-edit-key="${key}">수정</button><button class="delete-person-btn" data-delete-key="${key}">삭제</button></div></td></tr>`}).join(''); document.querySelectorAll('.copy').forEach(btn=>btn.addEventListener('click',async()=>{await navigator.clipboard.writeText(decodeURIComponent(btn.dataset.copy)); showToast('예약 안내문 복사됨')})); document.querySelectorAll('.delete-person-btn').forEach(btn=>btn.addEventListener('click',async()=>{const row=currentRows.find(item=>keyOf(item)===btn.dataset.deleteKey) || JSON.parse(decodeURIComponent(btn.dataset.deleteKey)); if(confirm(`정말 이 예약 데이터를 완전히 삭제할까요?\n\n${row.reservation_date} ${row.reservation_time}\n${row.child_name} / ${row.parent_name}\n\n삭제하면 흔적 없이 사라지고 복구할 수 없습니다.`)) await deleteReservation(row);})); document.querySelectorAll('.action-btn').forEach(btn=>btn.addEventListener('click',async()=>{const row=currentRows.find(item=>keyOf(item)===btn.dataset.key) || JSON.parse(decodeURIComponent(btn.dataset.key)); const st=btn.dataset.status; if(confirm(`상태를 '${st}'(으)로 변경할까요?`)) await updateReservation(row,{status:st});})); document.querySelectorAll('.channel-select').forEach(sel=>sel.addEventListener('change',async()=>{const row=currentRows.find(item=>keyOf(item)===sel.dataset.key) || JSON.parse(decodeURIComponent(sel.dataset.key)); await updateReservation(row,{booking_channel:sel.value});}))}
+
+function setCalendarMonthFromDate(dateStr){
+  const parts=String(dateStr||'').split('-').map(Number);
+  if(parts.length===3 && parts.every(Boolean)){
+    calendarYear=parts[0];
+    calendarMonth=parts[1]-1;
+  }
+}
+function dateKey(year,month,day){
+  return `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+}
+function timeSortValue(time){
+  const match=String(time||'').match(/^(\d{1,2}):(\d{2})/);
+  if(!match) return 9999;
+  return Number(match[1])*60+Number(match[2]);
+}
+function renderCalendar(){
+  if(!reservationCalendar || !calendarMonthTitle) return;
+  calendarMonthTitle.textContent=`${calendarYear}년 ${calendarMonth+1}월`;
+  const first=new Date(calendarYear,calendarMonth,1);
+  const start=new Date(calendarYear,calendarMonth,1-first.getDay());
+  const monthEnd=new Date(calendarYear,calendarMonth+1,0);
+  const totalCells=Math.ceil((first.getDay()+monthEnd.getDate())/7)*7;
+  const rowsByDate=currentRows.reduce((acc,row)=>{
+    const key=row.reservation_date;
+    if(!acc[key]) acc[key]=[];
+    acc[key].push(row);
+    return acc;
+  },{});
+  Object.values(rowsByDate).forEach(rows=>rows.sort((a,b)=>String(a.reservation_time||'').localeCompare(String(b.reservation_time||''))));
+  const allDayBlockedByDate=blockedRows.filter(row=>String(row.block_time||'')==='ALL').reduce((acc,row)=>{
+    acc[row.block_date]=row;
+    return acc;
+  },{});
+  const timeBlocksByDate=blockedRows.filter(row=>String(row.block_time||'')!=='ALL').reduce((acc,row)=>{
+    const key=row.block_date;
+    if(!acc[key]) acc[key]=[];
+    acc[key].push(row);
+    return acc;
+  },{});
+  const cells=[];
+  for(let i=0;i<totalCells;i++){
+    const cellDate=new Date(start);
+    cellDate.setDate(start.getDate()+i);
+    const y=cellDate.getFullYear();
+    const m=cellDate.getMonth();
+    const d=cellDate.getDate();
+    const key=dateKey(y,m,d);
+    const dayRows=rowsByDate[key]||[];
+    const dayTimeBlocks=timeBlocksByDate[key]||[];
+    const isOther=m!==calendarMonth;
+    const allDayBlock=allDayBlockedByDate[key];
+    const isBlocked=!!allDayBlock;
+    const calendarItems=[
+      ...dayTimeBlocks.map(row=>({type:'block',time:row.block_time,reason:row.reason||''})),
+      ...dayRows.map(row=>({type:'reservation',time:row.reservation_time,row}))
+    ].sort((a,b)=>timeSortValue(a.time)-timeSortValue(b.time) || (a.type==='block'?-1:1));
+    const itemHtml=calendarItems.length
+      ? calendarItems.map(item=>{
+        if(item.type==='block'){
+          return `<div class="calendar-time-block">${esc(item.time||'')} ${esc(item.reason||'예약불가')}</div>`;
+        }
+        const row=item.row;
+        return `<div class="calendar-item"><div class="calendar-item-main">${esc(row.reservation_time||'')} ${esc(row.child_name||'')}${row.parent_name?` (${esc(row.parent_name)})`:''}</div><div class="calendar-item-phone">${esc(row.phone||'')}</div></div>`;
+      }).join('')
+      : (isBlocked
+        ? `<div class="calendar-block-reason">${esc((allDayBlock.reason||'').trim() || '예약 없음')}</div>`
+        : '<div class="calendar-empty">예약 없음</div>');
+    cells.push(`<div class="calendar-day ${isOther?'other-month':''} ${isBlocked?'blocked-all':''}">
+      <div class="calendar-date"><span>${d}</span>${isBlocked?'<span class="calendar-block-label">예약불가</span>':''}</div>
+      <div class="calendar-items">${itemHtml}</div>
+    </div>`);
+  }
+  reservationCalendar.innerHTML=cells.join('');
+}
+async function deleteReservation(row){
+  let path=reservationPath(row);
+  try{
+    await supa(path,{method:'DELETE',headers:{Prefer:'return=minimal'}});
+    showToast('예약 데이터 삭제 완료');
+    await loadReservations(!dateFilter.value);
+  }catch(e){
+    alert('삭제 실패. reservations DELETE 정책을 확인해 주세요.');
+    console.error(e);
+  }
+}
+
+async function updateReservation(row,patch,message='상태 변경 완료'){let path=reservationPath(row); try{await supa(path,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify(patch)}); showToast(message); await loadReservations(!dateFilter.value); return true}catch(e){alert('변경 실패. reservations UPDATE 정책을 확인해 주세요.'); console.error(e); return false}}
+
+function selectWalkinTime(time){
+  selectedWalkinTime=time;
+  document.querySelectorAll('[data-walkin-time]').forEach(btn=>btn.classList.toggle('selected',btn.dataset.walkinTime===time));
+}
+function resetWalkinForm(){
+  document.getElementById('walkinChild').value='';
+  document.getElementById('walkinGrade').value='';
+  document.getElementById('walkinParent').value='';
+  document.getElementById('walkinPhone').value='';
+  selectWalkinTime('');
+}
+async function addWalkinReservation(){
+  const reservation_date=document.getElementById('walkinDate').value;
+  const reservation_time=selectedWalkinTime;
+  const child_name=document.getElementById('walkinChild').value.trim();
+  const grade=document.getElementById('walkinGrade').value;
+  const parent_name=document.getElementById('walkinParent').value.trim();
+  const phone=document.getElementById('walkinPhone').value.replace(/\D/g,'');
+  if(!reservation_date){alert('날짜를 선택해 주세요.');return}
+  if(!reservation_time){alert('시간을 선택해 주세요.');return}
+  if(!child_name){alert('아동 이름을 입력해 주세요.');return}
+  if(!grade){alert('아동 학년을 선택해 주세요.');return}
+  if(!parent_name){alert('보호자 이름을 입력해 주세요.');return}
+  if(!phone){alert('보호자 연락처를 입력해 주세요.');return}
+  const payload={reservation_date,reservation_time,child_name,grade,parent_name,phone,booking_channel:'전화',status:'검사완',memo:'현장접수'};
+  try{
+    await supa('/reservations',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify(payload)});
+    showToast('현장접수 명단 추가 완료');
+    resetWalkinForm();
+    await loadReservations(!dateFilter.value);
+  }catch(e){
+    alert('명단 추가 실패. reservations INSERT 정책 또는 입력값을 확인해 주세요.');
+    console.error(e);
+  }
+}
+
+async function loadBlocks(){
+  try{
+    const rows=await supa('/blocked_slots?select=*&order=block_date.asc,block_time.asc');
+    blockedRows=rows||[];
+    renderBlocks(blockedRows);
+    renderCalendar();
+  }catch(e){
+    blockBody.innerHTML='<tr><td colspan="4" class="empty danger">차단 일정을 불러오지 못했습니다. blocked_slots SELECT 정책을 확인하세요.</td></tr>';
+    renderCalendar();
+    console.error(e);
+  }
+}
+function renderBlocks(rows){
+  document.getElementById('countBlocked').textContent=rows.length;
+  if(!rows.length){blockBody.innerHTML='<tr><td colspan="4" class="empty">차단 일정이 없습니다.</td></tr>';return}
+  blockBody.innerHTML=rows.map(r=>{
+    const key=encodeURIComponent(JSON.stringify({block_date:r.block_date,block_time:r.block_time,reason:r.reason||''}));
+    return `<tr><td><span class="pill">${esc(r.block_date)}</span></td><td>${esc(r.block_time)}</td><td>${esc(r.reason||'')}</td><td><button class="action-btn btn-danger" data-block-delete="${key}">취소</button></td></tr>`;
+  }).join('');
+  document.querySelectorAll('[data-block-delete]').forEach(btn=>btn.addEventListener('click',async()=>{
+    const row=JSON.parse(decodeURIComponent(btn.dataset.blockDelete));
+    const label=`${row.block_date} ${row.block_time}${row.reason?' / '+row.reason:''}`;
+    if(confirm(`차단 일정을 취소할까요?\n${label}`)) await deleteBlock(row);
+  }));
+}
+async function deleteBlock(row){
+  let path='/blocked_slots?block_date=eq.'+encodeURIComponent(row.block_date)+'&block_time=eq.'+encodeURIComponent(row.block_time);
+  if(row.reason){
+    path+='&reason=eq.'+encodeURIComponent(row.reason);
+  }else{
+    path+='&or=(reason.is.null,reason.eq.)';
+  }
+  try{
+    await supa(path,{method:'DELETE',headers:{Prefer:'return=minimal'}});
+    showToast('차단 일정 취소됨');
+    await loadBlocks();
+  }catch(e){
+    alert('차단 일정 취소 실패. blocked_slots DELETE 정책을 확인해 주세요.');
+    console.error(e);
+  }
+}
+
+async function addBlock(){
+  const block_date=document.getElementById('blockDate').value;
+  const block_time=document.getElementById('blockTime').value;
+  const reason=document.getElementById('blockReason').value.trim();
+  if(!block_date){alert('차단 날짜를 선택해 주세요.');return}
+  try{
+    await supa('/blocked_slots',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({block_date,block_time,reason})});
+    showToast('차단 일정 추가됨');
+    document.getElementById('blockReason').value='';
+    try{ await loadBlocks(); }catch(refreshError){ console.warn(refreshError); }
+  }catch(e){
+    alert('차단 일정 저장 실패. blocked_slots INSERT 정책 또는 중복 차단 일정을 확인해 주세요.');
+    console.error(e);
+  }
+}
+
+function downloadExcel(){const rows=currentRows.map(r=>({'예약일':r.reservation_date,'시간':r.reservation_time,'관리':cleanChannel(r.booking_channel),'상태':cleanStatus(r.status),'아동 이름':r.child_name,'학년':r.grade,'보호자 이름':r.parent_name,'연락처':r.phone,'메모':r.memo||''})); const header=Object.keys(rows[0]||{'예약일':'','시간':'','관리':'','상태':'','아동 이름':'','학년':'','보호자 이름':'','연락처':'','메모':''}); const csv='\ufeff'+[header.join(','),...rows.map(o=>header.map(h=>'"'+String(o[h]??'').replaceAll('"','""')+'"').join(','))].join('\n'); const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`마인드피트니스_예약_${dateFilter.value||'전체'}.csv`; a.click(); URL.revokeObjectURL(a.href)}
+document.querySelectorAll('[data-walkin-time]').forEach(btn=>btn.addEventListener('click',()=>selectWalkinTime(btn.dataset.walkinTime)));
+document.getElementById('walkinPhone').addEventListener('input',e=>{e.target.value=e.target.value.replace(/\D/g,'')});
+document.getElementById('addWalkinBtn').addEventListener('click',addWalkinReservation);
+document.getElementById('addBlockBtn').addEventListener('click',addBlock); document.getElementById('excelBtn').addEventListener('click',downloadExcel); document.getElementById('refreshBtn').addEventListener('click',()=>loadReservations(false)); document.getElementById('todayBtn').addEventListener('click',()=>{dateFilter.value=''; document.getElementById('blockDate').value=todayStr; document.getElementById('walkinDate').value=todayStr; calendarYear=today.getFullYear(); calendarMonth=today.getMonth(); loadReservations(false)}); document.getElementById('allBtn').addEventListener('click',()=>{dateFilter.value='';loadReservations(true)}); dateFilter.addEventListener('change',()=>loadReservations(false)); statusFilter.addEventListener('change',()=>loadReservations(!dateFilter.value)); channelFilter.addEventListener('change',()=>loadReservations(!dateFilter.value)); keywordFilter.addEventListener('input',()=>loadReservations(!dateFilter.value));
+document.getElementById('calendarPrevBtn').addEventListener('click',()=>{calendarMonth--; if(calendarMonth<0){calendarMonth=11;calendarYear--;} renderCalendar();});
+document.getElementById('calendarTodayBtn').addEventListener('click',()=>{calendarYear=today.getFullYear(); calendarMonth=today.getMonth(); renderCalendar();});
+document.getElementById('calendarNextBtn').addEventListener('click',()=>{calendarMonth++; if(calendarMonth>11){calendarMonth=0;calendarYear++;} renderCalendar();});
+initAdminLogin();
+</script>
+</body>
+</html>
